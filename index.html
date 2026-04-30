@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TaskMaster</title>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#4f6ef7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TaskMaster">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Organize your life, one task at a time">
+<link rel="manifest" href="manifest.json">
+<!-- Apple touch icon (inline SVG as data URI) -->
+<link rel="apple-touch-icon" href="icon-96.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loading"><div class="loader"></div></div>
+
+<!-- PWA Install Banner -->
+<div class="pwa-banner hidden" id="pwaBanner">
+  <div class="pwa-icon">📋</div>
+  <div class="pwa-text">
+    <div class="pwa-title">Install TaskMaster</div>
+    <div class="pwa-sub">Add to home screen for best experience</div>
+  </div>
+  <div class="pwa-actions">
+    <button class="pwa-btn pwa-install" id="pwaInstallBtn">Install</button>
+    <button class="pwa-btn pwa-dismiss" id="pwaDismissBtn">✕</button>
+  </div>
+</div>
+
+<!-- Offline Toast -->
+<div class="offline-toast" id="offlineToast">
+  <span>📡</span> You're offline — some features may be limited
+</div>
+
+<!-- Streak Toast -->
+<div class="streak-toast" id="streakToast">🔥 <span id="streakToastMsg"></span></div>
+
+<!-- SVG ICON DEFS -->
+<svg style="display:none">
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="ic-task" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="ic-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="ic-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
+  <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></symbol>
+  <symbol id="ic-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="ic-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><polyline points="22 6 12 13 2 6"/></symbol>
+  <symbol id="ic-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="ic-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="ic-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-4 4-4 8a4 4 0 008 0c0-2-1-4-1-4s-1 2-3 2c-1 0-2-1-2-2 0-2 2-4 2-4z"/></symbol>
+  <symbol id="ic-google" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></symbol>
+</svg>
+
+<!-- LOGIN -->
+<div class="auth-wrap" id="loginScreen">
+  <div class="brand">
+    <div class="brand-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-task"/></svg></div>
+    <div class="brand-name">TaskMaster</div>
+    <div class="brand-sub">Organize your life, one task at a time</div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Welcome back</h2>
+    <div id="loginAlert"></div>
+    <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="loginEmail" placeholder="you@example.com"></div>
+    <div class="fg"><label class="lbl">Password</label><input type="password" class="inp" id="loginPassword" placeholder="Enter your password"></div>
+    <div class="forgot"><a href="#" id="showForgotPassword">Forgot password?</a></div>
+    <button class="btn btn-primary" id="loginBtn"><svg width="16" height="16"><use href="#ic-check"/></svg> Sign In</button>
+    <button class="btn btn-ghost" id="googleLoginBtn"><svg width="18" height="18"><use href="#ic-google"/></svg> Continue with Google</button>
+    <div class="auth-footer">No account? <a href="#" id="showSignup">Sign Up</a></div>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div class="auth-wrap hidden" id="signupScreen">
+  <div class="brand">
+    <div class="brand-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><use href="#ic-plus"/></svg></div>
+    <div class="brand-name">TaskMaster</div>
+    <div class="brand-sub">Start your productivity journey</div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Create Account</h2>
+    <div id="signupAlert"></div>
+    <div class="fg"><label class="lbl">Full Name</label><input type="text" class="inp" id="signupName" placeholder="Your name"></div>
+    <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="signupEmail" placeholder="you@example.com"></div>
+    <div class="fg"><label class="lbl">Password</label><input type="password" class="inp" id="signupPassword" placeholder="Min 6 characters"></div>
+    <button class="btn btn-primary" id="signupBtn">Create Account</button>
+    <button class="btn btn-ghost" id="googleSignupBtn"><svg width="18" height="18"><use href="#ic-google"/></svg> Continue with Google</button>
+    <div class="auth-footer">Already have an account? <a href="#" id="showLogin">Sign In</a></div>
+  </div>
+</div>
+
+<!-- EMAIL SENT -->
+<div class="auth-wrap hidden" id="emailSentScreen">
+  <div class="brand">
+    <div class="brand-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><use href="#ic-mail"/></svg></div>
+    <div class="brand-name">Check Your Email</div>
+    <div class="brand-sub">One more step to go</div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Verify Your Email</h2>
+    <p style="color:var(--t2);font-size:.875rem;margin-bottom:1.5rem;line-height:1.7">
+      We sent a verification link to<br>
+      <strong id="sentEmailAddress" style="color:var(--t1)">your@email.com</strong><br><br>
+      Click the link, then come back and sign in.
+    </p>
+    <button class="btn btn-primary" id="resendVerifyBtn">Resend Email</button>
+    <div class="auth-footer" style="margin-top:1rem">Already verified? <a href="#" id="showLogin2">Sign In</a></div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div class="auth-wrap hidden" id="forgotPasswordScreen">
+  <div class="brand">
+    <div class="brand-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><use href="#ic-key"/></svg></div>
+    <div class="brand-name">Reset Password</div>
+    <div class="brand-sub">We'll send a reset link to your email</div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Forgot Password?</h2>
+    <div id="forgotAlert"></div>
+    <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="forgotEmail" placeholder="your@email.com"></div>
+    <button class="btn btn-primary" id="sendResetOtpBtn">Send Reset Email</button>
+    <div class="auth-footer">Remember it? <a href="#" id="backToLogin">Sign In</a></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appContainer">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <button class="ibtn" id="menuBtn"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-menu"/></svg></button>
+      <div class="hdr-title" id="hdrTitle">Tasks</div>
+    </div>
+    <div class="hdr-right">
+      <button class="ibtn" id="searchBtn"><svg width="17" height="17" style="color:var(--t2)"><use href="#ic-search"/></svg></button>
+      <button class="ibtn" id="notifBtn">
+        <svg width="17" height="17" style="color:var(--t2)"><use href="#ic-bell"/></svg>
+        <span class="nbadge" id="notifBadge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sb-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-avatar" id="userAvatar" onclick="openEditProfile()">U</div>
+      <div class="sb-name" id="userName">User</div>
+      <div class="sb-email" id="userEmail">user@email.com</div>
+      <div class="sb-streak" id="sbStreak">
+        <span class="sb-streak-fire">🔥</span>
+        <span class="sb-streak-txt" id="sbStreakTxt">0 day streak</span>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" data-page="homePage"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-task"/></svg><span>My Tasks</span></div>
+      <div class="nav-item" data-page="categoriesPage"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-folder"/></svg><span>Categories</span></div>
+      <div class="nav-item" data-page="calendarPage"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-calendar"/></svg><span>Calendar</span></div>
+      <div class="nav-item" data-page="statsPage"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-bar-chart"/></svg><span>Statistics</span></div>
+      <div class="nav-item" data-page="settingsPage"><svg width="18" height="18" style="color:var(--t2)"><use href="#ic-settings"/></svg><span>Settings</span></div>
+    </nav>
+    <div class="sb-foot">
+      <button class="btn btn-primary" id="logoutBtn" style="font-size:.85rem;padding:.75rem">
+        <svg width="16" height="16"><use href="#ic-logout"/></svg> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-hdr">
+      <span>Notifications</span>
+      <button class="close-btn" id="closeNotifPanel">✕</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div class="empty"><svg width="36" height="36" style="color:var(--t2)"><use href="#ic-bell"/></svg><p>No notifications</p></div>
+    </div>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="homePage">
+    <div class="home">
+      <div class="greeting">
+        <div class="greeting-time" id="greetingTime">Good morning</div>
+        <div class="greeting-name" id="greetingName">Welcome back! <span>👋</span></div>
+      </div>
+
+      <!-- STREAK BANNER -->
+      <div class="streak-banner state-zero" id="streakBanner">
+        <div class="streak-fire" id="streakFireEmoji">🔥</div>
+        <div class="streak-info">
+          <div class="streak-count" id="streakCount">0</div>
+          <div class="streak-label">Day Streak</div>
+          <div class="streak-sub" id="streakSub">Complete a task today to start your streak!</div>
+          <div class="streak-week" id="streakWeek"></div>
+          <div class="streak-best hidden" id="streakBest">🏆 Best: 0 days</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num" style="color:var(--accent)" id="totalTasks">0</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--jade)" id="completedTasks">0</div><div class="stat-lbl">Done</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--amber)" id="pendingTasks">0</div><div class="stat-lbl">Pending</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--rose)" id="overdueTasks">0</div><div class="stat-lbl">Overdue</div></div>
+      </div>
+
+      <button class="add-task-btn" id="addTaskBtn">
+        <svg width="16" height="16"><use href="#ic-plus"/></svg> Add New Task
+      </button>
+
+      <div class="filter-row">
+        <div class="chip active" data-filter="all">All</div>
+        <div class="chip" data-filter="pending"><svg width="12" height="12"><use href="#ic-clock"/></svg> Pending</div>
+        <div class="chip" data-filter="completed"><svg width="12" height="12"><use href="#ic-check"/></svg> Done</div>
+        <div class="chip" data-filter="high"><svg width="12" height="12"><use href="#ic-alert"/></svg> High</div>
+        <div class="chip" data-filter="today"><svg width="12" height="12"><use href="#ic-calendar"/></svg> Today</div>
+      </div>
+
+      <div class="sec-hdr">
+        <div class="sec-title">Tasks</div>
+        <select class="sort-sel" id="sortSelect">
+          <option value="date">By Date</option>
+          <option value="priority">By Priority</option>
+          <option value="category">By Category</option>
+        </select>
+      </div>
+      <div id="tasksList">
+        <div class="empty">
+          <svg width="40" height="40" style="color:var(--t2)"><use href="#ic-task"/></svg>
+          <h3>No tasks yet</h3><p>Tap the button above to add your first task</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="statsPage"></div>
+  <div class="page" id="calendarPage"></div>
+  <div class="page" id="categoriesPage"></div>
+  <div class="page" id="settingsPage"></div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="profilePage">
+    <div class="profile-pg">
+      <div class="profile-hdr">
+        <div class="profile-av-lg" id="profileAvatar" onclick="openEditProfile()">U</div>
+        <h2 id="profileName">User Name</h2>
+        <p style="opacity:.8;font-size:.85rem" id="profileEmail">user@email.com</p>
+        <button class="ep-btn" onclick="openEditProfile()">Edit Profile</button>
+      </div>
+
+      <!-- Profile Streak Card -->
+      <div class="profile-streak-card" id="profileStreakCard">
+        <div class="big-fire">🔥</div>
+        <div class="profile-streak-stats">
+          <div class="profile-streak-num" id="profileStreakNum">0</div>
+          <div class="profile-streak-lbl">Day Streak</div>
+          <div class="profile-streak-best" id="profileStreakBest">🏆 Best: 0 days</div>
+        </div>
+      </div>
+
+      <div class="psec">
+        <h3><svg width="16" height="16"><use href="#ic-bar-chart"/></svg> Your Activity</h3>
+        <div class="pitem"><span>Total Tasks</span><strong id="profileTotalTasks">0</strong></div>
+        <div class="pitem"><span>Completed</span><strong id="profileCompletedTasks">0</strong></div>
+        <div class="pitem"><span>Completion Rate</span><strong id="profileCompletionRate">0%</strong></div>
+        <div class="pitem"><span>Member Since</span><strong id="profileMemberSince">Today</strong></div>
+      </div>
+      <div class="psec">
+        <h3>Achievements</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
+          <div style="text-align:center;padding:.875rem;background:var(--raised);border-radius:12px;border:1px solid var(--line2)">
+            <div style="font-size:1.6rem;margin-bottom:.4rem">🌟</div><div style="font-size:.72rem;color:var(--t2)">First Task</div>
+          </div>
+          <div style="text-align:center;padding:.875rem;background:var(--raised);border-radius:12px;border:1px solid var(--line2)">
+            <div style="font-size:1.6rem;margin-bottom:.4rem">🔥</div><div style="font-size:.72rem;color:var(--t2)">10 Tasks</div>
+          </div>
+          <div style="text-align:center;padding:.875rem;background:var(--raised);border-radius:12px;border:1px solid var(--line2)">
+            <div style="font-size:1.6rem;margin-bottom:.4rem">💪</div><div style="font-size:.72rem;color:var(--t2)">Productive</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <button class="bnav-btn active" data-page="homePage">
+      <span class="bnav-ico"><svg width="22" height="22"><use href="#ic-home"/></svg></span>
+      <span class="bnav-lbl">Home</span>
+    </button>
+    <button class="bnav-btn" data-page="statsPage">
+      <span class="bnav-ico"><svg width="22" height="22"><use href="#ic-bar-chart"/></svg></span>
+      <span class="bnav-lbl">Stats</span>
+    </button>
+    <button class="bnav-btn" data-page="calendarPage">
+      <span class="bnav-ico"><svg width="22" height="22"><use href="#ic-calendar"/></svg></span>
+      <span class="bnav-lbl">Calendar</span>
+    </button>
+    <button class="bnav-btn" data-page="profilePage">
+      <span class="bnav-ico"><svg width="22" height="22"><use href="#ic-user"/></svg></span>
+      <span class="bnav-lbl">Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h2 class="modal-title">Edit Profile</h2>
+      <button class="close-btn" id="closeEditProfile">✕</button>
+    </div>
+    <div id="editProfileAlert"></div>
+    <div class="av-upload-wrap">
+      <div class="av-upload-ring" onclick="document.getElementById('photoFileInput').click()">
+        <div class="av-upload-preview" id="editAvatarPreview">U</div>
+        <div class="av-cam-overlay">
+          <svg width="22" height="22" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      </div>
+      <span class="av-upload-hint">Tap photo to change</span>
+      <button class="av-remove-btn hidden" id="removePhotoBtn" onclick="removePhoto()">Remove photo</button>
+    </div>
+    <input type="file" id="photoFileInput" accept="image/*" style="display:none">
+    <div class="fg"><label class="lbl">Full Name</label><input type="text" class="inp" id="editName" placeholder="Your name"></div>
+    <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="editEmail" disabled></div>
+    <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal" id="taskModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h2 class="modal-title" id="modalTitle">Add Task</h2>
+      <button class="close-btn" id="closeModal">✕</button>
+    </div>
+    <div id="taskModalAlert"></div>
+    <div class="fg"><label class="lbl">Task Title *</label><input type="text" class="inp" id="taskTitle" placeholder="What needs to be done?"></div>
+    <div class="fg">
+      <label class="lbl">Category</label>
+      <select class="inp" id="taskCategory">
+        <option value="Personal">Personal</option>
+        <option value="Work">Work</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Study">Study</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="lbl">Priority</label>
+      <select class="inp" id="taskPriority">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+    <div class="fg"><label class="lbl">Due Date & Time *</label><input type="datetime-local" class="inp" id="taskDueDate"></div>
+    <button class="btn btn-primary" id="saveTaskBtn">Save Task</button>
+  </div>
+</div>
+
+<!-- SEARCH MODAL -->
+<div class="search-modal" id="searchModal">
+  <div class="search-wrap">
+    <input type="text" class="search-inp" id="searchInput" placeholder="Search tasks...">
+  </div>
+  <div class="search-res" id="searchResults"></div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
