@@ -2,7 +2,7 @@
   "name": "TaskMaster",
   "short_name": "TaskMaster",
   "description": "Organize your life, one task at a time",
-  "start_url": "/",
+  "start_url": "/index html",
   "display": "standalone",
   "background_color": "#0a0c14",
   "theme_color": "#4f6ef7",
